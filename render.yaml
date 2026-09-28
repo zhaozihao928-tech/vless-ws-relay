@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: vless-ws-relay
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    envVars:
+      - key: UUID
+        sync: false
+      - key: WS_PATH
+        sync: false
