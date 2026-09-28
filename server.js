@@ -92,14 +92,24 @@ function handle(ws) {
     const rest = buf.subarray(p);
     buf = null;
 
+    function shutdown() {
+      try { if (ws.readyState === 1) ws.close(); } catch (e) {}
+      // 有些链路上 close 帧会被拖住，1.5 秒后强拆，避免大量半死连接堆积
+      setTimeout(() => { try { ws.terminate(); } catch (e) {} }, 1500);
+      setTimeout(() => { try { remote.destroy(); } catch (e) {} }, 1600);
+    }
+
     remote = net.connect({ host, port }, () => {
+      clearTimeout(ct);
       if (rest.length) remote.write(rest);
     });
+    // 只给“建连阶段”超时，不设空闲超时（长连接代理不能被误杀）
+    const ct = setTimeout(() => { try { remote.destroy(); } catch (e) {} }, 15000);
     remote.on('data', (chunk) => {
       if (ws.readyState === 1) ws.send(chunk, { binary: true });
     });
-    remote.on('close', () => { try { ws.close(); } catch (e) {} });
-    remote.on('error', () => { try { ws.close(); } catch (e) {} });
+    remote.on('close', shutdown);
+    remote.on('error', shutdown);
   });
 }
 
