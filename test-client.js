@@ -27,7 +27,7 @@ ws.on('open', () => {
 });
 ws.on('message', (m) => { out = Buffer.concat([out, Buffer.from(m)]); });
 ws.on('close', () => {
-  const s = out.toString('utf8');
+  const s = out.subarray(2).toString("utf8");
   const first = s.split('\r\n')[0];
   console.log('SERVER_REPLY_FIRST_LINE=' + first);
   console.log('BYTES=' + out.length);

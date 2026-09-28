@@ -92,6 +92,10 @@ function handle(ws) {
     const rest = buf.subarray(p);
     buf = null;
 
+    // VLESS 响应头：版本 0 + 附加长度 0（sing-box / mihomo 都会先读这两个字节，
+    // 漏了它们客户端会把载荷的第一个字节当成版本号，报 “unknown version” / “unexpected response version”）
+    if (ws.readyState === 1) ws.send(Buffer.from([0, 0]), { binary: true });
+
     function shutdown() {
       try { if (ws.readyState === 1) ws.close(); } catch (e) {}
       // 有些链路上 close 帧会被拖住，1.5 秒后强拆，避免大量半死连接堆积
